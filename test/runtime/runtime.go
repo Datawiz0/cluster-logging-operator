@@ -4,6 +4,7 @@ package runtime
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 
 	loggingv1 "github.com/openshift/cluster-logging-operator/pkg/apis/logging/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -114,7 +115,7 @@ func ExecContainer(o runtime.Object, container, cmd string, args ...string) *exe
 	ocCmd := append([]string{
 		"exec",
 		"-c",
-		container,
+		strings.ToLower(container),
 		"-i",
 		"-n", m.GetNamespace(),
 		GroupVersionKind(o).Kind + "/" + m.GetName(),

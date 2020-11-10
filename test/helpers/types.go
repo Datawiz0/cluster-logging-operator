@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	logger "github.com/ViaQ/logerr/log"
+	"github.com/openshift/cluster-logging-operator/test"
 )
 
-type logs []log
+type Logs []Log
 
 type docker struct {
 	ContainerID string `json:"container_id"`
@@ -38,7 +39,7 @@ type pipelineMetadata struct {
 	} `json:"collector"`
 }
 
-type log struct {
+type Log struct {
 	Docker           *docker           `json:"docker"`
 	Kubernetes       *k8s              `json:"kubernetes"`
 	Message          string            `json:"message"`
@@ -49,15 +50,32 @@ type log struct {
 	IndexName        string            `json:"viaq_index_name"`
 	MessageID        string            `json:"viaq_msg_id"`
 	OpenshiftLabels  openshiftMeta     `json:"openshift"`
+	Timing
+}
+
+type Timing struct {
+	//EpocIn is only added during benchmark testing
+	EpocIn float64 `json:"epoc_in"`
+	//EpocOut is only added during benchmark testing
+	EpocOut float64 `json:"epoc_out"`
+}
+
+func (t *Timing) Difference() float64 {
+	return t.EpocOut - t.EpocIn
+}
+
+//Bloat is the ratio of overall size / Message size
+func (l *Log) Bloat() float64 {
+	return float64(len(l.String())) / float64(len(l.Message))
 }
 
 type openshiftMeta struct {
 	Labels map[string]string `json:"labels"`
 }
 
-func ParseLogs(in string) (logs, error) {
+func ParseLogs(in string) (Logs, error) {
 	logger.V(3).Info("ParseLogs", "content", in)
-	logs := []log{}
+	logs := []Log{}
 	if in == "" {
 		return logs, nil
 	}
@@ -70,8 +88,12 @@ func ParseLogs(in string) (logs, error) {
 	return logs, nil
 }
 
-func (l logs) ByIndex(prefix string) logs {
-	filtered := []log{}
+func (l *Log) String() string {
+	return test.JSONLine(l)
+}
+
+func (l Logs) ByIndex(prefix string) Logs {
+	filtered := []Log{}
 	for _, entry := range l {
 		if strings.HasPrefix(entry.IndexName, prefix) {
 			filtered = append(filtered, entry)
@@ -80,8 +102,8 @@ func (l logs) ByIndex(prefix string) logs {
 	return filtered
 }
 
-func (l logs) ByPod(name string) logs {
-	filtered := []log{}
+func (l Logs) ByPod(name string) Logs {
+	filtered := []Log{}
 	for _, entry := range l {
 		if entry.Kubernetes == nil {
 			continue
@@ -93,7 +115,7 @@ func (l logs) ByPod(name string) logs {
 	return filtered
 }
 
-func (l logs) NonEmpty() bool {
+func (l Logs) NonEmpty() bool {
 	if l == nil {
 		return false
 	}

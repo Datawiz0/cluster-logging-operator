@@ -10,6 +10,7 @@ import (
 	"github.com/ViaQ/logerr/log"
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	logging "github.com/openshift/cluster-logging-operator/pkg/apis/logging/v1"
+	"github.com/openshift/cluster-logging-operator/pkg/components/fluentd"
 	"github.com/openshift/cluster-logging-operator/pkg/constants"
 	"github.com/openshift/cluster-logging-operator/pkg/factory"
 	"github.com/openshift/cluster-logging-operator/pkg/utils"
@@ -273,7 +274,7 @@ func (clusterRequest *ClusterLoggingRequest) createOrUpdateFluentdConfigMap(flue
 		clusterRequest.Cluster.Namespace,
 		map[string]string{
 			"fluent.conf": fluentConf,
-			"run.sh":      string(utils.GetFileContents(utils.GetShareDir() + "/fluentd/run.sh")),
+			"run.sh":      fluentd.RunScript,
 		},
 	)
 

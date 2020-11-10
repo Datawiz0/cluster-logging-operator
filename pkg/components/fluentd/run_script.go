@@ -1,3 +1,7 @@
+package fluentd
+
+//RunScript is the run.sh script for launching the fluentd container process
+const RunScript = `
 #!/bin/bash
 
 CFG_DIR=/etc/fluent/configs.d
@@ -98,3 +102,5 @@ if [ -f /var/log/openshift-apiserver/audit.log.pos ] ; then
 fi
 
 exec fluentd $fluentdargs
+
+`
